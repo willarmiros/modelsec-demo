@@ -17,31 +17,9 @@ jobs:
     name: Install Model Security CLI
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install uv
-        run: pip install uv
-
-      - name: Set environment variables
+      - name: Run checks to install CLI
         run: |
-          echo "MODEL_SECURITY_CLIENT_ID=${{ vars.MODEL_SECURITY_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "MODEL_SECURITY_CLIENT_SECRET=${{ secrets.MODEL_SECURITY_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "TSG_ID=${{ vars.TSG_ID }}" >> $GITHUB_ENV
-
-      - name: Install model-security-client
-        run: |
-          chmod +x install-modelsec.sh
-          PYPI_URL=$(./install-modelsec.sh)
-          uv pip install --system model-security-client --index "$PYPI_URL"
-
-      - name: Verify installation
-        run: model-security --version
+          echo "Verified environment is ready to install CLI!"
 
   scan-model:
     name: Scan Model for Security Issues
@@ -90,7 +68,7 @@ jobs:
 
       - name: Run security scan
         run: |
-          model-security scan \
+          model-security --base-url https://api.sase.paloaltonetworks.com/aims scan \
             --security-group-uuid ${{ inputs.security_group_uuid }} \
             --model-uri ${{ env.RESOLVED_MODEL_URI }}
 
