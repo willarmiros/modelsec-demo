@@ -77,11 +77,28 @@ jobs:
           PYPI_URL=$(./install-modelsec.sh)
           uv pip install --system model-security-client --index "$PYPI_URL"
 
+      - name: Resolve model URI
+        run: |
+          MODEL_URI="${{ inputs.model_uri }}"
+
+          # Check if it's a Hugging Face URI
+          if [[ "$MODEL_URI" == https://huggingface.co* ]]; then
+            echo "Detected Hugging Face URI: $MODEL_URI"
+            RESOLVED_MODEL_URI="$MODEL_URI"
+          else
+            echo "Detected local model filename: $MODEL_URI"
+            # Treat as filename in models directory and compute absolute path
+            RESOLVED_MODEL_URI="$(pwd)/models/$MODEL_URI"
+            echo "Resolved to absolute path: $RESOLVED_MODEL_URI"
+          fi
+
+          echo "RESOLVED_MODEL_URI=$RESOLVED_MODEL_URI" >> $GITHUB_ENV
+
       - name: Run security scan
         run: |
           model-security scan \
             --security-group-uuid ${{ inputs.security_group_uuid }} \
-            --model-uri ${{ inputs.model_uri }}
+            --model-uri ${{ env.RESOLVED_MODEL_URI }}
 
   deploy-model:
     name: Deploy Model for Inference
