@@ -68,9 +68,20 @@ jobs:
 
       - name: Run security scan
         run: |
-          model-security --base-url https://api.sase.paloaltonetworks.com/aims scan \
-            --security-group-uuid ${{ inputs.security_group_uuid }} \
-            --model-uri ${{ env.RESOLVED_MODEL_URI }}
+          MODEL_URI="${{ inputs.model_uri }}"
+
+          # Determine the correct parameter based on model type
+          if [[ "$MODEL_URI" == https://huggingface.co* ]]; then
+            # Hugging Face model - use --model-uri
+            model-security --base-url https://api.sase.paloaltonetworks.com/aims scan \
+              --security-group-uuid ${{ inputs.security_group_uuid }} \
+              --model-uri ${{ env.RESOLVED_MODEL_URI }}
+          else
+            # Local model - use --model-path
+            model-security --base-url https://api.sase.paloaltonetworks.com/aims scan \
+              --security-group-uuid ${{ inputs.security_group_uuid }} \
+              --model-path ${{ env.RESOLVED_MODEL_URI }}
+          fi
 
   deploy-model:
     name: Deploy Model for Inference
